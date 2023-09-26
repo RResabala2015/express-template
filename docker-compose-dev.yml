@@ -60,8 +60,7 @@ services:
           sleep 1;
         done;
         echo Connected!;
-        npm install;
-        npm start;
+        npm run dev;
       "
 
 networks:
