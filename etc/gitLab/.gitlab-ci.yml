@@ -1,0 +1,49 @@
+image: docker:20.10.16
+
+services:
+  - docker:20.10.16-dind
+
+stages:   # List of stages for jobs, and their order of execution.
+  - unit-test
+  - quality_code
+
+variables:
+  SONAR_HOST_URL: $SONAR_HOST_URL
+  SONAR_TOKEN: $SONAR_TOKEN
+
+unit-test-job:   # This job runs in the test stage.
+  stage: unit-test    # It only starts when the job in the build stage completes successfully.
+  script:
+    - cp .env.test .env
+    - echo "Running unit tests... This will take about 15 seconds."
+    - docker compose -f 'docker-compose-dev.yml' up -d
+    - sleep 15
+    - docker compose exec backend npm install
+    - docker compose exec backend npm test
+    - ls -las coverage/
+    - echo "Code coverage is 90%"
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+  only:
+    - merge_requests
+  tags:
+    - academic-administration-runner-TLS       
+    
+sonarqube-job:
+  stage: quality_code
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [ "" ]
+  variables:
+    SONAR_HOST_URL: $SONAR_HOST_URL
+    SONAR_TOKEN: $SONAR_TOKEN
+    GIT_DEPTH: "0"
+  script:
+    - sonar-scanner -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+  only:
+    - merge_requests
+
+  tags:
+    - academic-administration-runner-TLS

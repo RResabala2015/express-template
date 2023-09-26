@@ -1,0 +1,120 @@
+asyncapi: 2.6.0
+
+#Info of the application
+info:
+  title: MEN
+  version: "1.0.0"
+  description: Backend template microservice with Alpine, NodeJS, Express, MongoDB, RabbitMq.
+  contact:
+    name: Renato Resabala
+    email: renatoresabala@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json    
+
+servers:
+  development:
+    url: localhost:5672
+    protocol: amqp
+    description: Development RabbitMQ
+  beta:
+    url: kripton-beta.org:5672
+    protocol: amqp
+    description: Beta RabbitMQ
+  production:
+    url: kripton.org:5672
+    protocol: amqp
+    description: Production RabbitMQ
+
+channels:
+  kripton.user.created:
+    description: The topic on which measured values may be produced and consumed
+    publish:
+      summary: Inform about a new user created
+      operationId: UserCreated
+      message:
+        $ref: "#/components/messages/UserCreated"
+
+  kripton.user.creation_failed:
+    description: The topic on which measured values may be produced and consumed
+    publish:
+      description: Inform about a new user creation failed
+      operationId: UserCreationFailed
+      message:
+        $ref: '#/components/messages/UserCreationFailed'
+
+  
+components:
+  messages:
+    UserCreated:
+      messageId: userCreated,
+      name: UserCreated
+      title: User created event
+      summary: Inform about a new user
+      contentType: application/json
+      tags:
+        - name: user
+        - name: register
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: Unique ID for the Object
+          fired_at:
+            type: string
+            format: date-time
+            description: Date that the event was fired
+          user:
+            $ref: '#/components/schemas/UserPayload'
+      
+
+    UserCreationFailed:
+      messageId: userCreationFailed,
+      name: UserCreationFailed
+      title: User creation failed
+      contentType: application/json
+      summary: Report when trying to create a user fails
+      tags:
+        - name: user
+        - name: failed
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+            description: Unique ID for the Object
+          fired_at:
+            type: string
+            format: date-time
+            description: Date that the event was fired
+          user:
+            $ref: '#/components/schemas/UserPayload'
+      
+
+  schemas:
+    UserPayload:
+      type: object
+      properties:
+        id:
+            type: string
+            format: uuid
+        firstName:
+            type: string
+            format: string
+            example: Clark
+        lastName:
+            type: string
+            format: string
+            example: Ken
+        email:
+            type: string
+            format: email
+            example: ClarKen@gmail.com
+        createdAt:
+          type: string
+          description: The created date
+          format: date-time

@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  # MongoDB service
+  mongoDB:
+    container_name: db
+    image: mongo:latest
+    restart: always
+    volumes:
+      - mongoDB:/data/db
+    networks:
+      - express-net
+  
+  # RabbitMQ service
+  rabbitmq:
+    container_name: message_broker
+    image: 'rabbitmq:3.8-management-alpine'
+    restart: always
+    ports:
+      # HTTP management UI
+      - 15673:15672
+      # AMQP protocol port
+      - 5673:5672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - express-net
+
+  # Backend service
+  backend:
+    container_name: express
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 8080:3000
+    networks:
+      - express-net
+    env_file:
+      - ./.env.dev
+    environment:
+      # rabbit credentials
+      RABBIT_HOST: amqp://rabbitmq
+      # database
+      DATABASE_URL: mongodb://mongoDB:27017
+    depends_on:
+      - mongoDB
+      - rabbitmq
+    links:
+      - rabbitmq
+    restart: on-failure
+    command: >
+      /bin/sh -c "
+        echo Waiting for rabbitmq service start...;
+        while ! nc -z rabbitmq 5672;
+        do
+          sleep 1;
+        done;
+        echo Connected!;
+        npm install;
+        npm start;
+      "
+
+networks:
+  express-net:
+    driver: bridge
+
+volumes:
+  mongoDB: {}
+  rabbitmq: {}
+
+#copiar del contenedor hacia la maquina local: docker cp -h
+# docker cp express:./usr/src/app/package.json /${HOST_DIR}
+# docker cp express:./usr/src/app/package-lock.json /${HOST_DIR}

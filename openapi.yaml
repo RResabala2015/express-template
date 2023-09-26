@@ -1,0 +1,189 @@
+openapi: '3.0.0'
+info:
+  title: MEN
+  version: "1.0.0"
+  description: Backend template microservice with Alpine, NodeJS, Express, MongoDB, RabbitMq.
+  contact:
+    name: Renato Resabala
+    email: renatoresabala@gmail.com
+  license:
+    name: MIT
+
+servers:
+   - url: 'http://localhost:8080/v1'
+     description: Local server
+
+paths:
+  /users:
+    get:
+      summary: Get a list of users
+      description: Returns an array containing all users.
+      operationId: users
+      tags:
+        - getAllUsers
+      parameters:
+        - name: "firstName"
+          in: query
+          description: "first name"
+          example: Clark
+          schema:
+            type: string
+        - name: "lastName"
+          in: query
+          description: "last name"
+          example: Ken
+          schema:
+            type: string
+        - name: "createdAt"
+          in: "query"
+          description: |-
+            A filter on the list based on the object createdAt field. The value can be a date string , or it can be a dictionary (associative array) with the following options:
+
+            createdAt[gt] :
+            Return results where the createdAt field is greater than this value.
+
+            createdAt[gte] :
+            Return results where the createdAt field is greater than or equal to this value.
+
+            createdAt[lt] :
+            Return results where the createdAt field is less than this value.
+
+            createdAt[lte] :
+            Return results where the createdAt field is less than or equal to this value.
+          example: 2017-01-31
+          schema:
+            type: array
+            example: "2017-01-01"
+            format: date
+            pattern: "YYYY-MM-DD"
+        - name: "limit"
+          in: "query"
+          description: Limit the results provided to this value. 10 is the default value, 50 is the maximum per page.
+          example: 10
+          schema:
+            type: integer
+            default: 10
+        - name: "page"
+          in: "query"
+          description: Paginating by page, 10 items(limit) per page (10 results, page 2)
+          example: 1
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserSchema"
+        "400":
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid request payload
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+
+  /users/:
+    post:
+      summary: Create a user
+      description: Returns a user created.
+      operationId: makeUser
+      tags:
+        - postUser
+      parameters:
+        - name: "firstName"
+          in: path
+          required: true
+          example: Clark
+          schema:
+            type: string    
+        - name: "lastName"
+          in: path
+          required: true
+          example: Ken
+          schema:
+            type: string        
+        - name: "email"
+          in: path
+          required: true
+          example: ClarKen@gmail.com
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created Operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSchema"
+        "400":
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Any of the data submitted does not comply with the required formats, please review the form."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+
+components:
+  schemas:
+    UserSchema:
+      type: object
+      properties:
+        id:
+            type: string
+            format: uuid
+        firstName:
+            type: string
+            format: string
+            example: Clark
+        lastName:
+            type: string
+            format: string
+            example: Ken
+        email:
+            type: string
+            format: email
+            example: ClarKen@gmail.com
+        status:
+          type: string
+          enum:
+            - created
+            - initialized
+            - deleted
+            - contacted
+            - verified
+          example: created
+        createdAt:
+          type: string
+          description: The created date
+          format: date-time
