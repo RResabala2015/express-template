@@ -3,9 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./src/bin/www",
+    "predev": "npm install",
+    "dev": "nodemon ./src/bin/www",
     "lint:fix": "eslint --fix .",
-    "test": "jest --verbose  --coverage --forceExit --watchAll=false --maxWorkers=1 --coverageDirectory=coverage"
+    "test": "jest --verbose  --coverage --forceExit --watchAll=false --maxWorkers=1 --coverageDirectory=coverage",
+    "prestart": "npm install",
+    "start": "node ./src/bin/www"
   },
   "dependencies": {
     "amqplib": "^0.10.3",
